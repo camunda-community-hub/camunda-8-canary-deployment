@@ -1,16 +1,35 @@
-# canarydeployment
 
-This application contains multiple application, which can start individualy
+[![Community badge: Stable](https://img.shields.io/badge/Lifecycle-Stable-brightgreen)](https://github.com/Camunda-Community-Hub/community/blob/main/extension-lifecycle.md#stable-)
+[![Community extension badge](https://img.shields.io/badge/Community%20Extension-An%20open%20source%20community%20maintained%20project-FF4700)](https://github.com/camunda-community-hub/community)
+![Compatible with: Camunda Platform 8](https://img.shields.io/badge/Compatible%20with-Camunda%20Platform%208-0072Ce)
 
-# Different function 
-The application can start functions. The function is piloted by a configuration variable.
-This is why in the k8 folder, different kubernetes deployment are present: they can start one pod running only one function.
+# Canary Deployment
+
+A Canary Deployment consists of deploying a component and sending part of the traffic to this component. If any failure is detected, the original platform must be set up.
+
+This project demonstrates how to do that dynamically with Camunda 8 without stopping the server. It demonstrates the feature on two different artifacts
+* on a service task. Deploy a new version of a service task, and send 20 % of traffic to this new service task
+* on a process. Deploy a new version of a process and send 15 % of traffic to this new process.
+
+Both do not need to stop the server or change the application.
+
+
+# Different function
+This project builds an application. This application contains multiple functions to demonstrate different steps.
+
+A Kubernetes folder (k8) contains all the different Kubernetes files needed to start the component. This is the same image but with a different configuration.
+
+This is why different Kubernetes deployments are present in the k8 folder: they can start one pod running only one function.
 
 ## canaryDeployment
+This application is a load balancer between version processes. It offers the same API as the REST Zeebe Gateway, but rules can be onboard to load balance traffic between different versions of the same process, per percentage.
 
-## customerApplication Ruby
+
+## customer application Ruby
+The Ruby application simulates a customer application, which creates process instances.
 
 ## Workers
+The workers define different workers
 
 # Build
 
@@ -27,7 +46,7 @@ docker push ghcr.io/camunda-community-hub/canarydeployment:latest
 
 ````
 
-The docker image is build using the Dockerfile present on the root level.
+The docker image is built using the Dockerfile present on the root level.
 
 
 Push the image to
@@ -37,10 +56,10 @@ ghcr.io/camunda-community-hub/process-execution-automator:
 
 
 # Scenario
-This section explain how to demonstrate a canary deployment, step by step
+This section explains how to demonstrate a canary deployment step-by-step
 
 ## Initial platform
-For all scenario, a Camunda 8.6 platform is up and running. The values.yaml used is
+For all scenarios, a Camunda 8.6 platform is up and running. The values.yaml used is
 ```yaml
 
 global:
@@ -58,7 +77,7 @@ prometheusServiceMonitor:
   enabled: true
 ```
 
-A Grafana page is started and are accessible.
+A Grafana page is started and is accessible.
 ```shell
 kubectl get svc -n default
 CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
