@@ -1,0 +1,36 @@
+# Configuration for running connectors in bundle with connector-runtime
+
+# local connection
+camunda:
+ client:
+     mode: selfManaged
+     zeebe:
+       enabled: true
+       grpc-address: http://localhost:26500
+       rest-address: http://localhost:8088
+       preferRestOverGrpc: false
+
+
+canary:
+  rubyApplication:
+    enabled: true
+    interval: 12000
+    numberOfPi: 1
+
+    processIdPurchase: "PurchaseRequest"
+    zeebeClientPurchase: true
+
+    processId: "CustomerTickets"
+    zeebeClient: false
+    restGateway: "http://localhost:8095/v2/process-instances"
+
+  workerApplication:
+    enabled: false
+    getPrice: true
+    getPriceV2: true
+
+  canaryApplication:
+    enabled: true
+
+server:
+  port: 8095

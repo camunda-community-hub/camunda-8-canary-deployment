@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rubypurchaserequest
+  labels:
+    app: rubypurchaserequest
+spec:
+  selector:
+    matchLabels:
+      app: rubypurchaserequest
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rubypurchaserequest
+    spec:
+      containers:
+        - name: rubypurchaserequest
+          image: ghcr.io/camunda-community-hub/canarydeployment:latest
+          imagePullPolicy: Always
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -Dcamunda.client.mode=selfManaged
+                -Dcamunda.client.zeebe.enabled=true
+                -Dcamunda.client.zeebe.grpc-address=http://camunda-zeebe-gateway:26500
+                -Dcamunda.client.zeebe.rest-address=http://camunda-zeebe-gateway:8088
+                -Dcamunda.client.zeebe.preferRestOverGrpc=false
+                -Dcanary.rubyApplication.enabled=true
+                -Dcanary.workerApplication.enabled=false
+                -Dcanary.canaryApplication.enabled=false
+                -Dcanary.workerApplication.getPrice=false
+                -Dcanary.rubyApplication.processId=PurchaseRequest
+                -Dcanary.rubyApplication.zeebeClient=true
+                -Dcanary.rubyApplication.interval=12000
+                -Dcanary.rubyApplication.numberOfPi=60
+
+          resources:
+            limits:
+              cpu: "500m"
+              memory: 500Mi
+            requests:
+              cpu: "500m"
+              memory: 500Mi

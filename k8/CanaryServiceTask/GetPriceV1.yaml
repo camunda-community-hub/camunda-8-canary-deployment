@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: getpricev1
+  labels:
+    app: getpricev1
+spec:
+  selector:
+    matchLabels:
+      app: getpricev1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: getpricev1
+    spec:
+      containers:
+        - name: getpricev1
+          image: ghcr.io/camunda-community-hub/canarydeployment:latest
+          imagePullPolicy: Always
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -Dcamunda.client.mode=selfManaged
+                -Dcamunda.client.zeebe.enabled=true
+                -Dcamunda.client.zeebe.grpc-address=http://camunda-zeebe-gateway:26500
+                -Dcamunda.client.zeebe.rest-address=http://camunda-zeebe-gateway:8088
+                -Dcamunda.client.zeebe.preferRestOverGrpc=false
+                -Dcanary.rubyApplication.enabled=false
+                -Dcanary.workerApplication.enabled=true
+                -Dcanary.canaryApplication.enabled=false
+                -Dcanary.workerApplication.getPrice=true
+                -Dcanary.workerApplication.getPriceV2=false
+
+          resources:
+            limits:
+              cpu: "500m"
+              memory: 500Mi
+            requests:
+              cpu: "500m"
+              memory: 500Mi

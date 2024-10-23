@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rubycustomertickets
+  labels:
+    app: rubycustomertickets
+spec:
+  selector:
+    matchLabels:
+      app: rubycustomertickets
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rubycustomertickets
+    spec:
+      containers:
+        - name: rubycustomertickets
+          image: ghcr.io/camunda-community-hub/canarydeployment:latest
+          imagePullPolicy: Always
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -Dcamunda.client.mode=selfManaged
+                -Dcamunda.client.zeebe.enabled=true
+                -Dcamunda.client.zeebe.grpc-address=http://camunda-zeebe-gateway:26500
+                -Dcamunda.client.zeebe.rest-address=http://canary-deployment:8095
+                -Dcamunda.client.zeebe.preferRestOverGrpc=false
+                -Dcanary.rubyApplication.enabled=true                
+                -Dcanary.workerApplication.enabled=false
+                -Dcanary.canaryApplication.enabled=false
+                -Dcanary.workerApplication.getPrice=false
+                -Dcanary.rubyApplication.restGateway=http://canary-deployment:8095/v2/process-instances
+                -Dcanary.rubyApplication.zeebeClient=false
+                -Dcanary.rubyApplication.processId=CustomerTickets
+                -Dcanary.rubyApplication.interval=12000
+                -Dcanary.rubyApplication.numberOfPi=60
+
+          resources:
+            limits:
+              cpu: "500m"
+              memory: 500Mi
+            requests:
+              cpu: "500m"
+              memory: 500Mi

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-application
+  labels:
+    app: canary-application
+spec:
+  selector:
+    matchLabels:
+      app: canary-application
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: canary-application
+    spec:
+      containers:
+        - name: canary-application
+          image: ghcr.io/camunda-community-hub/canarydeployment:latest
+          imagePullPolicy: Always
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -Dcamunda.client.mode=selfManaged
+                -Dcamunda.client.zeebe.enabled=true
+                -Dcamunda.client.zeebe.grpc-address=http://camunda-zeebe-gateway:26500
+                -Dcamunda.client.zeebe.rest-address=http://camunda-zeebe-gateway:8088
+                -Dcamunda.client.zeebe.preferRestOverGrpc=false
+                -Dcanary.rubyApplication.enabled=false
+                -Dcanary.workerApplication.enabled=false
+                -Dcanary.canary-application.enabled=true
+                -Dserver.port=8095
+
+          resources:
+            limits:
+              cpu: "500m"
+              memory: 500Mi
+            requests:
+              cpu: "500m"
+              memory: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-deployment
+  labels:
+    app: canary-application
+spec:
+  selector:
+    app: canary-application  # This must match the labels in your Deployment
+  ports:
+    - protocol: TCP
+      port: 8095         # The port exposed by the service
+      targetPort: 8095   # The container port defined in your deployment
+  type: ClusterIP
