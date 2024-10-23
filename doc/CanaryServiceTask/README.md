@@ -20,11 +20,11 @@ During this deployment, we want to verify that the server never stops and contin
 2. start the worker application.
    The application takes in parameter the worker to start, and this deployment starts the `get-price` V1
 ```shell
-kubectl create -f k8/servicetask/GetPriceV1.yaml
+kubectl create -f k8/CanaryServiceTask/GetPriceV1.yaml
 ```
 3. Start the application Ruby, which creates process instances on PurchaseRequest. The application takes into parameter the processId, the frequency, and the number of process instances to create
 ```shell
-kubectk create -f k8/CanaryServiceTask/GetPriceV1.yaml
+kubectl create -f k8/CanaryServiceTask/GetPriceV1.yaml
 ```
 Check the pod starts correctly.
 
@@ -36,7 +36,7 @@ kubectl logs -f  <PodNameFor getpricev1>
 4. Start the Ruby application
 
 ```shell
-kubectl create -f k8/CanaryServiceTask/RubyCustomerTickets.yaml
+kubectl create -f k8/CanaryServiceTask/RubyPurchaseRequest.yaml
 ```
 
 Check the pod starts correctly.
