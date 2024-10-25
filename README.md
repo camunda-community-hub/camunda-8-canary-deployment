@@ -36,11 +36,11 @@ The workers define different workers
 Rebuilt the image via
 ````
 mvn clean install
-docker build -t pierre-yves-monnet/canarydeployment:1.0.0 .
-docker tag pierre-yves-monnet/canarydeployment:1.0.0 ghcr.io/camunda-community-hub/canarydeployment:1.0.0
-docker push ghcr.io/camunda-community-hub/canarydeployment:1.0.0
+docker build -t pierre-yves-monnet/canarydeployment:1.0.1 .
+docker tag pierre-yves-monnet/canarydeployment:1.0.1 ghcr.io/camunda-community-hub/canarydeployment:1.0.1
+docker push ghcr.io/camunda-community-hub/canarydeployment:1.0.1
 
-docker tag pierre-yves-monnet/canarydeployment:1.0.0 ghcr.io/camunda-community-hub/canarydeployment:latest
+docker tag pierre-yves-monnet/canarydeployment:1.0.1 ghcr.io/camunda-community-hub/canarydeployment:latest
 docker push ghcr.io/camunda-community-hub/canarydeployment:latest
 
 
