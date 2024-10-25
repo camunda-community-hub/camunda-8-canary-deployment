@@ -17,15 +17,15 @@ canary:
     interval: 12000
     numberOfPi: 1
 
-    processIdPurchase: "PurchaseRequest"
-    zeebeClientPurchase: true
+    processId: "PurchaseRequest"
+    zeebeClient: true
 
-    processId: "CustomerTickets"
-    zeebeClient: false
+    processIdTicket: "CustomerTickets"
+    zeebeClientTicker: false
     restGateway: "http://localhost:8095/v2/process-instances"
 
   workerApplication:
-    enabled: false
+    enabled: true
     getPrice: true
     getPriceV2: true
 

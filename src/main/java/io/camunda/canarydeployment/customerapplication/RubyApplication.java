@@ -3,11 +3,6 @@ package io.camunda.canarydeployment.customerapplication;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.client.api.response.ProcessInstanceEvent;
 import jakarta.annotation.PostConstruct;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +61,7 @@ public class RubyApplication {
     logger.info("InitRubyApplication - enabled[{}]", rubyApplicationEnabled);
 
     if (rubyApplicationEnabled) {
-      scheduleHearth();
+      scheduleHeartBeat();
     }
 
   }
@@ -95,7 +90,7 @@ public class RubyApplication {
   @PostMapping("/ruby/start")
   public String startTask() {
     rubyApplicationEnabled = true;
-    scheduleHearth();
+    scheduleHeartBeat();
     return "Customer Application started.";
   }
 
@@ -110,7 +105,7 @@ public class RubyApplication {
   /*                                                                      */
   /* ******************************************************************** */
 
-  private void scheduleHearth() {
+  private void scheduleHeartBeat() {
     if (rubyApplicationEnabled) {
       if (interval < 1000) {
         logger.info("Interval too low (min 1s), set it to 10s");
@@ -131,21 +126,26 @@ public class RubyApplication {
       } else
         createViaRestTemplate();
     }
-    scheduleHearth();
+    scheduleHeartBeat();
   }
 
   /**
    * Return a processInstance, created via the ZeebeClient interface
+   *
    * @return
    */
   private ProcessInstanceEvent createViaZeebeClient() {
-    return zeebeClient.newCreateInstanceCommand()
-        .bpmnProcessId(processId)
-        .latestVersion()
-        .variables(new HashMap<>())
-        .send()
-        .join();
-
+    try {
+      return zeebeClient.newCreateInstanceCommand()
+          .bpmnProcessId(processId)
+          .latestVersion()
+          .variables(new HashMap<>())
+          .send()
+          .join();
+    } catch (Exception e) {
+      logger.error("can't send GRPC {}", e.getMessage());
+      return null;
+    }
   }
 
   /**
@@ -169,7 +169,7 @@ public class RubyApplication {
       ResponseEntity<String> response = restTemplate.exchange(restGateway, HttpMethod.POST, request, String.class);
 
       // Print response status code
-      logger.info(" Response Code: {} on Url[{}] ",response.getStatusCodeValue(), restGateway);
+      logger.info(" Response Code: {} on Url[{}] ", response.getStatusCodeValue(), restGateway);
     } catch (HttpClientErrorException e) {
       logger.error("HttpClientErrorException Can't send HTTP Url [{}] : {}", restGateway, e.getMessage());
     } catch (Exception e) {
