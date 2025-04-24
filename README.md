@@ -13,8 +13,121 @@ This project demonstrates how to do that dynamically with Camunda 8 without stop
 
 Both do not need to stop the server or change the application.
 
+# Blue-Green versus Canary
 
-# Different function
+## Blue-Green
+The Blue-Green deployment strategy involves maintaining two separate environments: Blue and Green. 
+At any given time, traffic is routed to one of these environments (e.g., Blue). When a new version is ready, it's deployed to the inactive environment (e.g., Green),
+and traffic is switched over to it.
+
+This approach enables easy rollback: if the Green environment encounters issues, traffic can be switched back to Blue quickly.
+
+[BlueGreen](doc/images/BlueGreenEnvironment.png)
+
+
+## Canary 
+
+In a Canary deployment, both the old and new versions are active simultaneously. Traffic is gradually shifted to the new version based on predefined criteria—such as a percentage of traffic (e.g., 20%) or business logic (e.g., users from a specific region).
+
+Effectively, a Blue-Green deployment is a special case of a Canary deployment with 100% of traffic shifted at once.
+
+This project focuses on the Canary method, as it encompasses the Blue-Green strategy and offers greater flexibility.
+
+
+![Canary](doc/images/CanaryEnvironment.png)
+
+
+# Deployment with Camunda 8
+
+Camunda 8 is not a monolithic application, so it doesn't define environments in the traditional sense. Instead, individual artifacts can be deployed or updated independently.
+Different artefacts are subject to be "Canary deployed":
+* process. A new version of a process is ready, and some traffic should be sent to this new version
+* sub-process. A new version of a process is ready, and it is call by a parent. Some traffic from the parent should be sent to the new sub-process
+* worker. A new worker is developed, and some traffic should be sent.
+
+It’s common for these artifacts to be combined: the new process used new version of workers. This new process can be call directly, or from a parent.
+
+# Different solutions
+
+Two options are possibles:
+* Deploy wo Clusters with Load Balancer,to send traffic to one server, or another one.
+
+Deploy two separate Camunda 8 clusters and use a load balancer to route traffic. This is a traditional Blue-Green or Canary setup but duplicates the entire environment.
+
+* Single Cluster with Smart Routing
+
+Deploy both versions of artifacts on a single Camunda 8 cluster. Use intelligent routing via variables or frontend applications to control which version is executed.
+
+Camunda 8 supports dynamic deployment and execution of artifacts, making this approach more efficient.
+
+# Principle for each artefact
+
+## Process
+
+A new process is deployed, at a new version. Doing that, all traffic (new creation) is deployed to this new version.
+To have a control on that, a "front end" must be used. The application will ask the creation on the front end, and this front end decided which version to used.
+This is the Canary applications embedded on this project
+
+![ExplanationOneRule.png](doc/CanaryProcess/ExplanationOneRule.png)
+
+## Sub-process
+
+A parent call a sub-process, and some traffic must be re-direct to one sub-process or another one.
+
+![SubProcess](doc/images/SubProcessCanary.png)
+There is two ways to implement this request. The main concern here is the "versionTag" is not dynamic in Camunda 8. When this feature will be available, then the same mechanism as the worker can be used.
+
+### Using the processID in FEEL
+The process ID in the call activity can be transformed in a FEEL expression.
+
+![DynamicID](doc/images/CallActivityDynamicId.png)
+
+This variable pilot the sub-process to call.
+![img.png](doc/images/CallActivityDynamicCanary.png)
+
+**Advantages**: the parent does not change
+
+**Concerns**: the sub-process must have a different name, and not a new version.
+
+
+### Using the version Tag
+
+The version Tag is a constant. So calling the version 1 is a constant in the parent. 
+![CallActivity with Version tag](doc/images/CallActivityVersionTag.png)
+To call the version 2, a new version of the PARENT must be deployed
+![Call Activity multiple parents](doc/images/CallActivityVersionTagMultipleParent.png)
+
+Splitting the traffic between sub-process consist of split the traffic between parents.
+
+![Call Activity splitting traffic](doc/images/CallActivityVersionTagSplitting.png)
+
+**Advantages**: the sub-process uses versions
+
+**Concerns**: parent must be redeployed, even this is not here where the main change occures. For a sub-process, it may exist a lor of parents
+
+## Worker
+A worker can be call dynamically
+![Worker](doc/images/WorkerJobType.png)
+
+Doing that, it's possible to control which implementation can be used, using the variable to specify the job type. The two workers are deploying in the cluster, registering with a different job-type.
+
+![Worker different implementation](doc/images/WorkersCallDifferentImplementations.png)
+
+The worker to call can be decided by an application in front like the CanaryApps. This method is the less intrusive in the process.
+![img.png](doc/images/WorkerJobTypeCanary.png)
+
+or by different methods, for example by a DMN table.
+![img.png](doc/images/WorkerDMNTable.png)
+
+Or directly in the FEEL expression
+![img.png](doc/images/WorkerFeelExpression.png)
+
+# This project
+
+The CanaryApp included in this project acts as a proxy for the Zeebe Gateway. It enriches process instances with routing variables based on rules. Business applications call the CanaryApp, which decides how to route execution within the Camunda 8 cluster.
+
+
+# Different functions
 This project builds an application. This application contains multiple functions to demonstrate different steps.
 
 A Kubernetes folder (k8) contains all the different Kubernetes files needed to start the component. This is the same image but with a different configuration.
